@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback & Reviews - Delight Catering</title>
+</head>
+<body>
+    <div class="content-header">
+        <h2 id="pageTitle">Feedback & Reviews</h2>
+        <p id="pageSubtitle">Customer reviews and ratings</p>
+    </div>
+
+    <!-- Admin Statistics (Only for Admin) -->
+    <div id="adminStats" style="display: none;">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3 id="avgRating">0.0</h3>
+                    <p>Average Rating</p>
+                </div>
+                <div class="stat-icon">⭐</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3 id="totalReviews">0</h3>
+                    <p>Total Reviews</p>
+                </div>
+                <div class="stat-icon">📝</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3 id="pendingReviews">0</h3>
+                    <p>Pending Approval</p>
+                </div>
+                <div class="stat-icon">⏳</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3 id="highRated">0</h3>
+                    <p>5-Star Reviews</p>
+                </div>
+                <div class="stat-icon">😊</div>
+            </div>
+        </div>
+
+        <!-- Admin Filters -->
+        <div class="card">
+            <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                <select class="form-control" style="width: 180px;" onchange="filterByRating(this.value)">
+                    <option value="">All Ratings</option>
+                    <option value="5">5 Stars</option>
+                    <option value="4">4+ Stars</option>
+                    <option value="3">3+ Stars</option>
+                    <option value="2">2+ Stars</option>
+                    <option value="1">1+ Stars</option>
+                </select>
+                <select class="form-control" style="width: 180px;" onchange="filterByStatus(this.value)">
+                    <option value="">All Reviews</option>
+                    <option value="approved">Approved</option>
+                    <option value="pending">Pending</option>
+                </select>
+                <button class="btn btn-secondary" onclick="loadFeedback()">🔄 Refresh</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Create Form (Only for Customer) -->
+    <div id="customerForm" style="display: none;">
+        <div class="card">
+            <h3 class="card-title">Rate Your Experience</h3>
+            <form id="feedbackForm">
+                <div class="form-group">
+                    <label>Overall Rating *</label>
+                    <div style="display: flex; gap: 10px; font-size: 32px;">
+                        <span class="star-rating" data-rating="1" onclick="setRating(1)">☆</span>
+                        <span class="star-rating" data-rating="2" onclick="setRating(2)">☆</span>
+                        <span class="star-rating" data-rating="3" onclick="setRating(3)">☆</span>
+                        <span class="star-rating" data-rating="4" onclick="setRating(4)">☆</span>
+                        <span class="star-rating" data-rating="5" onclick="setRating(5)">☆</span>
+                    </div>
+                    <input type="hidden" id="rating" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Your Comments</label>
+                    <textarea id="comment" class="form-control" rows="4" placeholder="Tell us about your experience..."></textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                    <div class="form-group">
+                        <label>Food Quality</label>
+                        <select id="foodQualityRating" class="form-control">
+                            <option value="">Not rated</option>
+                            <option value="1">1 - Poor</option>
+                            <option value="2">2 - Fair</option>
+                            <option value="3">3 - Good</option>
+                            <option value="4">4 - Very Good</option>
+                            <option value="5">5 - Excellent</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Service Quality</label>
+                        <select id="serviceRating" class="form-control">
+                            <option value="">Not rated</option>
+                            <option value="1">1 - Poor</option>
+                            <option value="2">2 - Fair</option>
+                            <option value="3">3 - Good</option>
+                            <option value="4">4 - Very Good</option>
+                            <option value="5">5 - Excellent</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Presentation</label>
+                        <select id="presentationRating" class="form-control">
+                            <option value="">Not rated</option>
+                            <option value="1">1 - Poor</option>
+                            <option value="2">2 - Fair</option>
+                            <option value="3">3 - Good</option>
+                            <option value="4">4 - Very Good</option>
+                            <option value="5">5 - Excellent</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Value for Money</label>
+                        <select id="valueForMoneyRating" class="form-control">
+                            <option value="">Not rated</option>
+                            <option value="1">1 - Poor</option>
+                            <option value="2">2 - Fair</option>
+                            <option value="3">3 - Good</option>
+                            <option value="4">4 - Very Good</option>
+                            <option value="5">5 - Excellent</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Suggestions for Improvement</label>
+                    <textarea id="suggestions" class="form-control" rows="3" placeholder="How can we serve you better?"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="wouldRecommend" checked style="width: 20px; height: 20px;">
+                        <span>I would recommend Delight Catering to others</span>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        Submit Feedback
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                        Clear Form
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reviews List -->
+    <div class="card" style="margin-top: 30px;">
+        <h3 class="card-title" id="reviewsTitle">Reviews</h3>
+        <div id="loadingMessage" style="text-align: center; padding: 40px; display: none;">
+            <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p style="margin-top: 15px; color: #666;">Loading reviews...</p>
+        </div>
+        <div id="errorMessage" style="display: none; padding: 20px; background: #ffebee; color: #c62828; border-radius: 8px; margin-bottom: 20px;"></div>
+        <div id="reviewsList"></div>
+    </div>
+
+    <!-- Admin Response Modal -->
+    <div id="responseModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 10px; max-width: 600px; width: 90%; padding: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3>Add Admin Response</h3>
+                <button onclick="closeResponseModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
+            </div>
+            
+            <form id="responseForm">
+                <input type="hidden" id="responseFeedbackId">
+                <div class="form-group">
+                    <label>Your Response *</label>
+                    <textarea id="adminResponseText" class="form-control" rows="4" required placeholder="Thank you for your feedback..."></textarea>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        Submit Response
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeResponseModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 10px; max-width: 600px; width: 90%; padding: 30px; max-height: 90vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3>Edit Review</h3>
+                <button onclick="closeEditModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
+            </div>
+            
+            <form id="editForm">
+                <input type="hidden" id="editFeedbackId">
+                
+                <div class="form-group">
+                    <label>Overall Rating *</label>
+                    <div style="display: flex; gap: 10px; font-size: 32px;">
+                        <span class="star-rating-edit" data-rating="1" onclick="setEditRating(1)">☆</span>
+                        <span class="star-rating-edit" data-rating="2" onclick="setEditRating(2)">☆</span>
+                        <span class="star-rating-edit" data-rating="3" onclick="setEditRating(3)">☆</span>
+                        <span class="star-rating-edit" data-rating="4" onclick="setEditRating(4)">☆</span>
+                        <span class="star-rating-edit" data-rating="5" onclick="setEditRating(5)">☆</span>
+                    </div>
+                    <input type="hidden" id="editRating" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Comments</label>
+                    <textarea id="editComment" class="form-control" rows="4"></textarea>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
+                    <div class="form-group">
+                        <label>Food Quality</label>
+                        <select id="editFoodQualityRating" class="form-control">
+                            <option value="">Not rated</option>
+                            <option value="1">1 - Poor</option>
+                            <option value="2">2 - Fair</option>
+                            <option value="3">3 - Good</option>
+                            <option value="4">4 - Very Good</option>
+                            <option value="5">5 - Excellent</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Service Quality</label>
+                        <select id="editServiceRating" class="form-control">
+                            <option value="">Not rated</option>
+                            <option value="1">1 - Poor</option>
+                            <option value="2">2 - Fair</option>
+                            <option value="3">3 - Good</option>
+                            <option value="4">4 - Very Good</option>
+                            <option value="5">5 - Excellent</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Presentation</label>
+                        <select id="editPresentationRating" class="form-control">
+                            <option value="">Not rated</option>
+                            <option value="1">1 - Poor</option>
+                            <option value="2">2 - Fair</option>
+                            <option value="3">3 - Good</option>
+                            <option value="4">4 - Very Good</option>
+                            <option value="5">5 - Excellent</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Value for Money</label>
+                        <select id="editValueForMoneyRating" class="form-control">
+                            <option value="">Not rated</option>
+                            <option value="1">1 - Poor</option>
+                            <option value="2">2 - Fair</option>
+                            <option value="3">3 - Good</option>
+                            <option value="4">4 - Very Good</option>
+                            <option value="5">5 - Excellent</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Suggestions</label>
+                    <textarea id="editSuggestions" class="form-control" rows="3"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="editWouldRecommend" style="width: 20px; height: 20px;">
+                        <span id="editRecommendLabel">Would recommend</span>
+                    </label>
+                </div>
+
+                <div class="form-group" id="editApprovedGroup" style="display: none;">
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                        <input type="checkbox" id="editApproved" style="width: 20px; height: 20px;">
+                        <span>Approved for public display</span>
+                    </label>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        Update Review
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let isAdmin = false;
+        let selectedRating = 0;
+        let selectedEditRating = 0;
+        let allFeedback = [];
+        let filteredFeedback = [];
+
+        // Initialize page
+        setTimeout(function() {
+            // Check both possible storage keys
+            let userStr = localStorage.getItem('user');
+            if (!userStr) {
+                userStr = localStorage.getItem('currentUser');
+            }
+            
+            if (userStr) {
+                currentUser = JSON.parse(userStr);
+                console.log('Current user loaded:', currentUser);
+                console.log('User role:', currentUser.role);
+                isAdmin = currentUser.role === 'ADMIN';
+                initializePage();
+            } else {
+                console.error('No user found in localStorage');
+                alert('Please login first');
+                window.location.href = 'login.html';
+            }
+        }, 100);
+
+        // Initialize page based on user role
+        function initializePage() {
+            if (isAdmin) {
+                document.getElementById('pageTitle').textContent = 'Feedback & Reviews Management';
+                document.getElementById('pageSubtitle').textContent = 'Customer reviews and ratings administration';
+                document.getElementById('adminStats').style.display = 'block';
+                document.getElementById('customerForm').style.display = 'none';
+                document.getElementById('reviewsTitle').textContent = 'All Customer Reviews';
+                loadStatistics();
+            } else {
+                document.getElementById('pageTitle').textContent = 'Submit Feedback';
+                document.getElementById('pageSubtitle').textContent = 'Share your experience with us';
+                document.getElementById('adminStats').style.display = 'none';
+                document.getElementById('customerForm').style.display = 'block';
+                document.getElementById('reviewsTitle').textContent = 'My Reviews';
+            }
+            loadFeedback();
+        }
+
+        // Load statistics (Admin only)
+        async function loadStatistics() {
+            try {
+                const avgData = await getAverageRatingAPI();
+                document.getElementById('avgRating').textContent = avgData.averageRating.toFixed(1);
+            } catch (error) {
+                console.error('Failed to load average rating:', error);
+            }
+        }
+
+        // Update statistics from loaded data
+        function updateStatistics() {
+            if (!isAdmin) return;
+            
+            const totalReviews = allFeedback.length;
+            const pendingReviews = allFeedback.filter(f => !f.approved).length;
+            const highRated = allFeedback.filter(f => f.rating === 5).length;
+
+            document.getElementById('totalReviews').textContent = totalReviews;
+            document.getElementById('pendingReviews').textContent = pendingReviews;
+            document.getElementById('highRated').textContent = highRated;
+        }
+
+        // Load feedback
+        async function loadFeedback() {
+            showLoading(true);
+            hideError();
+            
+            try {
+                allFeedback = await getAllFeedbackAPI();
+                
+                if (isAdmin) {
+                    filteredFeedback = [...allFeedback];
+                    updateStatistics();
+                } else {
+                    filteredFeedback = allFeedback.filter(f => f.customer.id === currentUser.id);
+                }
+                
+                renderFeedback();
+                showLoading(false);
+            } catch (error) {
+                showLoading(false);
+                showError(error.message || 'Failed to load feedback');
+            }
+        }
+
+        // Render feedback list
+        function renderFeedback() {
+            const reviewsList = document.getElementById('reviewsList');
+            reviewsList.innerHTML = '';
+
+            if (filteredFeedback.length === 0) {
+                const message = isAdmin ? 'No reviews found' : 'You haven\'t submitted any reviews yet';
+                reviewsList.innerHTML = `<p style="text-align: center; padding: 40px; color: #999;">${message}</p>`;
+                return;
+            }
+
+            filteredFeedback.forEach(feedback => {
+                const stars = '⭐'.repeat(feedback.rating) + '☆'.repeat(5 - feedback.rating);
+                const statusColor = feedback.approved ? 'green' : 'orange';
+                const statusText = feedback.approved ? 'Approved' : 'Pending';
+
+                const customerName = feedback.customer ? 
+                    `${feedback.customer.firstName} ${feedback.customer.lastName}` : 
+                    'Anonymous';
+
+                const reviewHTML = `
+                    <div style="padding: 20px; border-bottom: 1px solid #f0f0f0; background: ${!feedback.approved ? '#fff5f5' : 'white'};">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                            <div>
+                                <strong style="font-size: 16px; color: #333;">${isAdmin ? customerName : 'Review #' + feedback.id}</strong>
+                                <p style="margin: 5px 0; font-size: 13px; color: #999;">
+                                    ${isAdmin && feedback.customer ? feedback.customer.email : 'Posted on ' + new Date(feedback.createdAt).toLocaleDateString()}
+                                </p>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="color: #ffa500; font-size: 18px; margin-bottom: 5px;">${stars}</div>
+                                <span style="background: ${statusColor}20; color: ${statusColor}; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;">
+                                    ${statusText}
+                                </span>
+                            </div>
+                        </div>
+                        
+                        ${feedback.comment ? `<p style="color: #666; margin: 15px 0; line-height: 1.6;">${feedback.comment}</p>` : ''}
+                        
+                        ${feedback.foodQualityRating || feedback.serviceRating || feedback.presentationRating || feedback.valueForMoneyRating ? `
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 15px 0; padding: 15px; background: #f9f9f9; border-radius: 8px;">
+                                ${feedback.foodQualityRating ? `
+                                    <div>
+                                        <small style="color: #999;">Food Quality</small>
+                                        <div style="color: #ffa500;">⭐ ${feedback.foodQualityRating}/5</div>
+                                    </div>
+                                ` : ''}
+                                ${feedback.serviceRating ? `
+                                    <div>
+                                        <small style="color: #999;">Service</small>
+                                        <div style="color: #ffa500;">⭐ ${feedback.serviceRating}/5</div>
+                                    </div>
+                                ` : ''}
+                                ${feedback.presentationRating ? `
+                                    <div>
+                                        <small style="color: #999;">Presentation</small>
+                                        <div style="color: #ffa500;">⭐ ${feedback.presentationRating}/5</div>
+                                    </div>
+                                ` : ''}
+                                ${feedback.valueForMoneyRating ? `
+                                    <div>
+                                        <small style="color: #999;">Value</small>
+                                        <div style="color: #ffa500;">⭐ ${feedback.valueForMoneyRating}/5</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        ` : ''}
+                        
+                        ${feedback.suggestions ? `
+                            <div style="margin: 15px 0; padding: 12px; background: #f0f8ff; border-left: 4px solid #667eea; border-radius: 4px;">
+                                <strong style="color: #667eea;">Suggestions:</strong>
+                                <p style="margin: 5px 0 0 0; color: #666;">${feedback.suggestions}</p>
+                            </div>
+                        ` : ''}
+                        
+                        ${feedback.wouldRecommend !== undefined ? `
+                            <div style="margin: 10px 0;">
+                                <span style="font-size: 14px; color: ${feedback.wouldRecommend ? '#2e7d32' : '#c62828'};">
+                                    ${feedback.wouldRecommend ? '✓ Would recommend' : '✗ Would not recommend'}
+                                </span>
+                            </div>
+                        ` : ''}
+                        
+                        ${feedback.adminResponse ? `
+                            <div style="margin-top: 15px; padding: 15px; background: #e8f5e9; border-radius: 8px; border-left: 4px solid #4caf50;">
+                                <strong style="color: #2e7d32;">Admin Response:</strong>
+                                <p style="margin: 8px 0 0 0; color: #333;">${feedback.adminResponse}</p>
+                                <small style="color: #666;">Responded on ${new Date(feedback.adminResponseDate).toLocaleDateString()}</small>
+                            </div>
+                        ` : ''}
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                            <small style="color: #999;">Posted ${new Date(feedback.createdAt).toLocaleDateString()}</small>
+                            <div style="display: flex; gap: 10px;">
+                                ${isAdmin ? `
+                                    ${!feedback.approved ? `
+                                        <button class="btn btn-primary" style="padding: 5px 15px; font-size: 13px;" onclick="approveFeedback(${feedback.id})">
+                                            ✓ Approve
+                                        </button>
+                                    ` : ''}
+                                    ${!feedback.adminResponse ? `
+                                        <button class="btn btn-secondary" style="padding: 5px 15px; font-size: 13px;" onclick="openResponseModal(${feedback.id})">
+                                            💬 Respond
+                                        </button>
+                                    ` : ''}
+                                    <button class="btn btn-secondary" style="padding: 5px 15px; font-size: 13px;" onclick="openEditModal(${feedback.id})">
+                                        ✏️ Edit
+                                    </button>
+                                    <button class="btn btn-danger" style="padding: 5px 15px; font-size: 13px;" onclick="deleteFeedback(${feedback.id})">
+                                        🗑 Delete
+                                    </button>
+                                ` : `
+                                    <button class="btn btn-secondary" style="padding: 5px 15px; font-size: 13px;" onclick="openEditModal(${feedback.id})">
+                                        ✏️ Edit
+                                    </button>
+                                    <button class="btn btn-danger" style="padding: 5px 15px; font-size: 13px;" onclick="deleteFeedback(${feedback.id})">
+                                        🗑 Delete
+                                    </button>
+                                `}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                reviewsList.innerHTML += reviewHTML;
+            });
+        }
+
+        // Set rating
+        function setRating(rating) {
+            selectedRating = rating;
+            document.getElementById('rating').value = rating;
+            
+            document.querySelectorAll('.star-rating').forEach((star, index) => {
+                star.textContent = index < rating ? '⭐' : '☆';
+            });
+        }
+
+        // Set edit rating
+        function setEditRating(rating) {
+            selectedEditRating = rating;
+            document.getElementById('editRating').value = rating;
+            
+            document.querySelectorAll('.star-rating-edit').forEach((star, index) => {
+                star.textContent = index < rating ? '⭐' : '☆';
+            });
+        }
+
+        // Handle form submission (Customer only)
+        document.getElementById('feedbackForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (!selectedRating) {
+                alert('Please select an overall rating');
+                return;
+            }
+
+            const feedbackData = {
+                customer: { id: currentUser.id },
+                booking: null,
+                rating: selectedRating,
+                comment: document.getElementById('comment').value.trim() || null,
+                foodQualityRating: document.getElementById('foodQualityRating').value || null,
+                serviceRating: document.getElementById('serviceRating').value || null,
+                presentationRating: document.getElementById('presentationRating').value || null,
+                valueForMoneyRating: document.getElementById('valueForMoneyRating').value || null,
+                suggestions: document.getElementById('suggestions').value.trim() || null,
+                wouldRecommend: document.getElementById('wouldRecommend').checked
+            };
+
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            try {
+                await createFeedbackAPI(feedbackData);
+                alert('Thank you for your feedback!');
+                resetForm();
+                loadFeedback();
+            } catch (error) {
+                alert('Failed to submit feedback: ' + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Feedback';
+            }
+        });
+
+        // Reset form
+        function resetForm() {
+            document.getElementById('feedbackForm').reset();
+            selectedRating = 0;
+            document.querySelectorAll('.star-rating').forEach(star => {
+                star.textContent = '☆';
+            });
+            document.getElementById('rating').value = '';
+        }
+
+        // Filter by rating (Admin only)
+        async function filterByRating(minRating) {
+            if (!isAdmin) return;
+            showLoading(true);
+            hideError();
+            
+            try {
+                if (minRating === '') {
+                    filteredFeedback = await getAllFeedbackAPI();
+                } else {
+                    filteredFeedback = await getHighRatedFeedbackAPI(parseInt(minRating));
+                }
+                renderFeedback();
+                showLoading(false);
+            } catch (error) {
+                showLoading(false);
+                showError(error.message || 'Filter failed');
+            }
+        }
+
+        // Filter by status (Admin only)
+        async function filterByStatus(status) {
+            if (!isAdmin) return;
+            showLoading(true);
+            hideError();
+            
+            try {
+                if (status === 'approved') {
+                    filteredFeedback = await getApprovedFeedbackAPI();
+                } else if (status === 'pending') {
+                    const allData = await getAllFeedbackAPI();
+                    filteredFeedback = allData.filter(f => !f.approved);
+                } else {
+                    filteredFeedback = await getAllFeedbackAPI();
+                }
+                renderFeedback();
+                showLoading(false);
+            } catch (error) {
+                showLoading(false);
+                showError(error.message || 'Filter failed');
+            }
+        }
+
+        // Approve feedback (Admin only)
+        async function approveFeedback(feedbackId) {
+            if (!isAdmin) return;
+            if (!confirm('Approve this review?')) return;
+            
+            try {
+                await approveFeedbackAPI(feedbackId);
+                alert('Review approved successfully!');
+                loadFeedback();
+            } catch (error) {
+                alert('Failed to approve review: ' + error.message);
+            }
+        }
+
+        // Open response modal (Admin only)
+        function openResponseModal(feedbackId) {
+            if (!isAdmin) return;
+            document.getElementById('responseFeedbackId').value = feedbackId;
+            document.getElementById('adminResponseText').value = '';
+            document.getElementById('responseModal').style.display = 'flex';
+        }
+
+        // Close response modal
+        function closeResponseModal() {
+            document.getElementById('responseModal').style.display = 'none';
+            document.getElementById('responseForm').reset();
+        }
+
+        // Handle response form submission (Admin only)
+        document.getElementById('responseForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const feedbackId = document.getElementById('responseFeedbackId').value;
+            const responseText = document.getElementById('adminResponseText').value.trim();
+
+            if (!responseText) {
+                alert('Please enter a response');
+                return;
+            }
+
+            const submitBtn = document.querySelector('#responseForm button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            try {
+                await addAdminResponseAPI(feedbackId, responseText);
+                alert('Response added successfully!');
+                closeResponseModal();
+                loadFeedback();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Response';
+            }
+        });
+
+        // Open edit modal
+        async function openEditModal(feedbackId) {
+            try {
+                const feedback = await getFeedbackByIdAPI(feedbackId);
+                
+                document.getElementById('editFeedbackId').value = feedback.id;
+                document.getElementById('editComment').value = feedback.comment || '';
+                document.getElementById('editFoodQualityRating').value = feedback.foodQualityRating || '';
+                document.getElementById('editServiceRating').value = feedback.serviceRating || '';
+                document.getElementById('editPresentationRating').value = feedback.presentationRating || '';
+                document.getElementById('editValueForMoneyRating').value = feedback.valueForMoneyRating || '';
+                document.getElementById('editSuggestions').value = feedback.suggestions || '';
+                document.getElementById('editWouldRecommend').checked = feedback.wouldRecommend;
+                
+                // Show approved checkbox only for admin
+                if (isAdmin) {
+                    document.getElementById('editApprovedGroup').style.display = 'block';
+                    document.getElementById('editApproved').checked = feedback.approved;
+                    document.getElementById('editRecommendLabel').textContent = 'Customer would recommend';
+                } else {
+                    document.getElementById('editApprovedGroup').style.display = 'none';
+                    document.getElementById('editRecommendLabel').textContent = 'I would recommend Delight Catering to others';
+                }
+                
+                setEditRating(feedback.rating);
+                
+                document.getElementById('editModal').style.display = 'flex';
+            } catch (error) {
+                alert('Failed to load feedback: ' + error.message);
+            }
+        }
+
+        // Close edit modal
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+            document.getElementById('editForm').reset();
+            selectedEditRating = 0;
+        }
+
+        // Handle edit form submission
+        document.getElementById('editForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (!selectedEditRating) {
+                alert('Please select an overall rating');
+                return;
+            }
+
+            const feedbackId = document.getElementById('editFeedbackId').value;
+            const feedback = await getFeedbackByIdAPI(feedbackId);
+
+            const updatedData = {
+                customer: feedback.customer,
+                booking: feedback.booking,
+                rating: selectedEditRating,
+                comment: document.getElementById('editComment').value.trim() || null,
+                foodQualityRating: document.getElementById('editFoodQualityRating').value || null,
+                serviceRating: document.getElementById('editServiceRating').value || null,
+                presentationRating: document.getElementById('editPresentationRating').value || null,
+                valueForMoneyRating: document.getElementById('editValueForMoneyRating').value || null,
+                suggestions: document.getElementById('editSuggestions').value.trim() || null,
+                wouldRecommend: document.getElementById('editWouldRecommend').checked,
+                approved: isAdmin ? document.getElementById('editApproved').checked : feedback.approved,
+                adminResponse: feedback.adminResponse,
+                adminResponseDate: feedback.adminResponseDate
+            };
+
+            const submitBtn = this.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Updating...';
+
+            try {
+                await updateFeedbackAPI(feedbackId, updatedData);
+                alert('Review updated successfully!');
+                closeEditModal();
+                loadFeedback();
+            } catch (error) {
+                alert('Failed to update review: ' + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Update Review';
+            }
+        });
+
+        // Delete feedback
+        async function deleteFeedback(feedbackId) {
+            const confirmMsg = isAdmin 
+                ? 'Are you sure you want to delete this review? This action cannot be undone.'
+                : 'Are you sure you want to delete your review?';
+                
+            if (!confirm(confirmMsg)) return;
+            
+            try {
+                await deleteFeedbackAPI(feedbackId);
+                alert('Review deleted successfully!');
+                loadFeedback();
+            } catch (error) {
+                alert('Failed to delete review: ' + error.message);
+            }
+        }
+
+        // Show loading
+        function showLoading(show) {
+            document.getElementById('loadingMessage').style.display = show ? 'block' : 'none';
+            document.getElementById('reviewsList').style.display = show ? 'none' : 'block';
+        }
+
+        // Show error
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        // Hide error
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+    </script>
+
+    <style>
+        .star-rating, .star-rating-edit {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .star-rating:hover, .star-rating-edit:hover {
+            transform: scale(1.2);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Delight Catering</title>
+</head>
+<body>
+    <div class="content-header">
+        <h2>Welcome to Delight Catering System</h2>
+        <p>Manage your catering business efficiently</p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-info">
+                <h3 id="totalBookings">156</h3>
+                <p>Total Bookings</p>
+            </div>
+            <div class="stat-icon">📅</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-info">
+                <h3 id="activeEvents">48</h3>
+                <p>Active Events</p>
+            </div>
+            <div class="stat-icon">🎉</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-info">
+                <h3 id="totalCustomers">892</h3>
+                <p>Happy Customers</p>
+            </div>
+            <div class="stat-icon">😊</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-info">
+                <h3 id="totalStaff">24</h3>
+                <p>Staff Members</p>
+            </div>
+            <div class="stat-icon">👥</div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card">
+        <h3 class="card-title">Quick Actions</h3>
+        <div class="quick-actions">
+            <div class="quick-action-btn" onclick="alert('Create New Booking')">
+                <div class="quick-action-icon">➕</div>
+                <div class="quick-action-text">New Booking</div>
+            </div>
+            <div class="quick-action-btn" onclick="alert('Add Menu Item')">
+                <div class="quick-action-icon">🍴</div>
+                <div class="quick-action-text">Add Menu Item</div>
+            </div>
+            <div class="quick-action-btn" onclick="alert('Add Staff Member')">
+                <div class="quick-action-icon">👔</div>
+                <div class="quick-action-text">Add Staff</div>
+            </div>
+            <div class="quick-action-btn" onclick="alert('Create Package')">
+                <div class="quick-action-icon">📦</div>
+                <div class="quick-action-text">New Package</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load dashboard statistics
+        function loadDashboardStats() {
+            // This would typically fetch from an API
+            // For now, using demo data
+            
+            // You can animate numbers counting up
+            animateValue('totalBookings', 0, 156, 1000);
+            animateValue('activeEvents', 0, 48, 1000);
+            animateValue('totalCustomers', 0, 892, 1000);
+            animateValue('totalStaff', 0, 24, 1000);
+        }
+
+        // Animate counting numbers
+        function animateValue(id, start, end, duration) {
+            const element = document.getElementById(id);
+            if (!element) return;
+            
+            const range = end - start;
+            const increment = range / (duration / 16);
+            let current = start;
+            
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= end) {
+                    element.textContent = end;
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.floor(current);
+                }
+            }, 16);
+        }
+
+        // Call immediately - no need for DOMContentLoaded in dynamically loaded pages
+        setTimeout(function() {
+            if (typeof getAllUsersAPI === 'function') {
+                loadDashboardStats();
+            } else {
+                console.error('API functions not loaded yet');
+            }
+        }, 100);
+    </script>
+</body>
+</html>

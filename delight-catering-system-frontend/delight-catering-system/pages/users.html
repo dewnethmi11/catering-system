@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management - Delight Catering</title>
+</head>
+<body>
+    <div class="content-header">
+        <h2>User Management</h2>
+        <p>Manage customers, admins, and staff accounts</p>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="card">
+        <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;justify-content: space-between;">
+            <div>
+                <select class="form-control" style="width: 200px;" onchange="handleRoleFilter(this.value)">
+                    <option value="">All Roles</option>
+                    <option value="CUSTOMER">Customer</option>
+                    <option value="ADMIN">Admin</option>
+                    <option value="CHEF">Chef</option>
+                    <option value="DRIVER">Driver</option>
+                    <option value="COORDINATOR">Coordinator</option>
+                </select>
+            </div>
+            <div> 
+                <button class="btn btn-primary" onclick="openAddUserModal()">➕ Add New User</button>
+                <button class="btn btn-secondary" onclick="loadUsers()">🔄 Refresh</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card">
+        <h3 class="card-title">User List</h3>
+        <div id="loadingMessage" style="text-align: center; padding: 40px; display: none;">
+            <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            <p style="margin-top: 15px; color: #666;">Loading users...</p>
+        </div>
+        <div id="errorMessage" style="display: none; padding: 20px; background: #ffebee; color: #c62828; border-radius: 8px; margin-bottom: 20px;"></div>
+        <div style="overflow-x: auto;">
+            <table id="usersTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="userTableBody">
+                    <!-- Data will be loaded dynamically -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add/Edit User Modal -->
+    <div id="userModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 10px; max-width: 600px; width: 90%; max-height: 90vh; overflow-y: auto; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 id="modalTitle">Add New User</h3>
+                <button onclick="closeUserModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">&times;</button>
+            </div>
+            
+            <form id="userForm">
+                <input type="hidden" id="userId">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                    <div class="form-group">
+                        <label>First Name *</label>
+                        <input type="text" id="firstName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name *</label>
+                        <input type="text" id="lastName" class="form-control" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Username *</label>
+                    <input type="text" id="username" class="form-control" required minlength="3">
+                </div>
+                
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="email" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Phone Number *</label>
+                    <input type="tel" id="phoneNumber" class="form-control" required pattern="[0-9]{10}" placeholder="10-digit number">
+                </div>
+                
+                <div class="form-group">
+                    <label>Address</label>
+                    <textarea id="address" class="form-control" rows="2"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Role *</label>
+                    <select id="role" class="form-control" required>
+                        <option value="CUSTOMER">Customer</option>
+                        <option value="ADMIN">Admin</option>
+                        <option value="CHEF">Chef</option>
+                        <option value="DRIVER">Driver</option>
+                        <option value="COORDINATOR">Coordinator</option>
+                    </select>
+                </div>
+                
+                <div id="passwordFields">
+                    <div class="form-group">
+                        <label>Password *</label>
+                        <input type="password" id="password" class="form-control" minlength="6">
+                    </div>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">
+                        <span id="submitBtnText">Create User</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="closeUserModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let allUsers = [];
+        let filteredUsers = [];
+        let currentEditId = null;
+
+        // Initialize and load users immediately
+        console.log('Users page script loaded');
+        
+        // Load users immediately
+        loadUsers();
+
+        // Load all users
+        async function loadUsers() {
+            console.log('loadUsers called');
+            showLoading(true);
+            hideError();
+            
+            try {
+                allUsers = await getAllUsersAPI();
+                filteredUsers = [...allUsers];
+                renderUsers();
+                showLoading(false);
+            } catch (error) {
+                showLoading(false);
+                showError(error.message || 'Failed to load users');
+            }
+        }
+
+        // Render users table
+        function renderUsers() {
+            const tbody = document.getElementById('userTableBody');
+            tbody.innerHTML = '';
+
+            if (filteredUsers.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px; color: #999;">No users found</td></tr>';
+                return;
+            }
+
+            filteredUsers.forEach(user => {
+                const row = `
+                    <tr>
+                        <td>${user.id}</td>
+                        <td><strong>${user.username}</strong></td>
+                        <td>${user.firstName} ${user.lastName}</td>
+                        <td>${user.email}</td>
+                        <td>${user.phoneNumber || 'N/A'}</td>
+                        <td><span style="background: #e3f2fd; color: #1976d2; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">${user.role}</span></td>
+                        <td>
+                            <span style="color: ${user.active ? 'green' : 'red'};">●</span> 
+                            ${user.active ? 'Active' : 'Inactive'}
+                        </td>
+                        <td>
+                            <button class="btn btn-secondary" style="padding: 5px 10px; margin-right: 5px;" onclick="editUser(${user.id})">
+                                Edit
+                            </button>
+                            ${user.active ? `
+                                <button class="btn btn-danger" style="padding: 5px 10px;" onclick="deactivateUser(${user.id})">
+                                    Deactivate
+                                </button>
+                            ` : `
+                                <button class="btn btn-primary" style="padding: 5px 10px;" onclick="activateUser(${user.id})">
+                                    Activate
+                                </button>
+                            `}
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // Handle role filter
+        async function handleRoleFilter(role) {
+            console.log('handleRoleFilter called with:', role);
+            showLoading(true);
+            hideError();
+            
+            try {
+                if (role === '') {
+                    filteredUsers = await getAllUsersAPI();
+                } else {
+                    filteredUsers = await getUsersByRoleAPI(role);
+                }
+                renderUsers();
+                showLoading(false);
+            } catch (error) {
+                showLoading(false);
+                showError(error.message || 'Filter failed');
+            }
+        }
+
+        // Open add user modal
+        function openAddUserModal() {
+            console.log('openAddUserModal called');
+            currentEditId = null;
+            document.getElementById('modalTitle').textContent = 'Add New User';
+            document.getElementById('submitBtnText').textContent = 'Create User';
+            document.getElementById('userForm').reset();
+            document.getElementById('userId').value = '';
+            document.getElementById('passwordFields').style.display = 'block';
+            document.getElementById('password').required = true;
+            document.getElementById('userModal').style.display = 'flex';
+        }
+
+        // Close user modal
+        function closeUserModal() {
+            console.log('closeUserModal called');
+            document.getElementById('userModal').style.display = 'none';
+            document.getElementById('userForm').reset();
+            currentEditId = null;
+        }
+
+        // Edit user
+        async function editUser(userId) {
+            console.log('editUser called with:', userId);
+            try {
+                const user = await getUserByIdAPI(userId);
+                
+                currentEditId = userId;
+                document.getElementById('modalTitle').textContent = 'Edit User';
+                document.getElementById('submitBtnText').textContent = 'Update User';
+                document.getElementById('userId').value = user.id;
+                document.getElementById('firstName').value = user.firstName;
+                document.getElementById('lastName').value = user.lastName;
+                document.getElementById('username').value = user.username;
+                document.getElementById('email').value = user.email;
+                document.getElementById('phoneNumber').value = user.phoneNumber || '';
+                document.getElementById('address').value = user.address || '';
+                document.getElementById('role').value = user.role;
+                
+                // Hide password field for editing
+                document.getElementById('passwordFields').style.display = 'none';
+                document.getElementById('password').required = false;
+                
+                document.getElementById('userModal').style.display = 'flex';
+            } catch (error) {
+                alert('Failed to load user details: ' + error.message);
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('userForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            console.log('Form submitted');
+            
+            const userData = {
+                firstName: document.getElementById('firstName').value.trim(),
+                lastName: document.getElementById('lastName').value.trim(),
+                username: document.getElementById('username').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                phoneNumber: document.getElementById('phoneNumber').value.trim(),
+                address: document.getElementById('address').value.trim(),
+                role: document.getElementById('role').value
+            };
+
+            // Add password only for new users
+            if (!currentEditId) {
+                userData.password = document.getElementById('password').value;
+            }
+
+            const submitBtn = document.querySelector('#userForm button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading-spinner"></span> Processing...';
+
+            try {
+                if (currentEditId) {
+                    // Update existing user
+                    await updateUserAPI(currentEditId, userData);
+                    alert('User updated successfully!');
+                } else {
+                    // Create new user
+                    await createUserAPI(userData);
+                    alert('User created successfully!');
+                }
+                
+                closeUserModal();
+                loadUsers();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = currentEditId ? 'Update User' : 'Create User';
+            }
+        });
+
+        // Activate user
+        async function activateUser(userId) {
+            console.log('activateUser called with:', userId);
+            if (!confirm('Are you sure you want to activate this user?')) return;
+            
+            try {
+                await activateUserAPI(userId);
+                alert('User activated successfully!');
+                loadUsers();
+            } catch (error) {
+                alert('Failed to activate user: ' + error.message);
+            }
+        }
+
+        // Deactivate user
+        async function deactivateUser(userId) {
+            console.log('deactivateUser called with:', userId);
+            if (!confirm('Are you sure you want to deactivate this user?')) return;
+            
+            try {
+                await deactivateUserAPI(userId);
+                alert('User deactivated successfully!');
+                loadUsers();
+            } catch (error) {
+                alert('Failed to deactivate user: ' + error.message);
+            }
+        }
+
+        // Show loading
+        function showLoading(show) {
+            document.getElementById('loadingMessage').style.display = show ? 'block' : 'none';
+            document.getElementById('usersTable').style.display = show ? 'none' : 'table';
+        }
+
+        // Show error
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+
+        // Hide error
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+    </script>
+
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+    </style>
+</body>
+</html>
